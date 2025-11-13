@@ -1,0 +1,694 @@
+/* upanishad_chapterstyle.css */
+/* Upanishads Flashcards - Chapter Style CSS */
+/* Common stylesheet for all chapter flashcard files */
+
+:root {
+    --primary: #f4a003;
+    --primary-dark: #f78606;
+    --secondary: #d4af37;
+    --accent: #d55a02;
+    --light: #f8f9fa;
+    --dark: #802703;
+    --gray: #696969;
+    --gray-light: #D3D3D3;
+    --success: #228B22;
+    --radius: 12px;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 15px 40px rgba(0, 0, 0, 0.12);
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Dark mode variables */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --light: #1A1A1A;
+        --dark: #e8f5e9;
+        --gray: #A9A9A9;
+        --gray-light: #363636;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        --shadow-hover: 0 15px 40px rgba(0, 0, 0, 0.4);
+    }
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background-color: var(--light);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    color: var(--dark);
+    line-height: 1.1;
+}
+
+.container {
+    width: 100%;
+    max-width: 900px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-top: 5px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+h1 {
+    color: var(--dark);
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.chapter-info {
+    color: var(--gray);
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 8px;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    background: rgba(44, 85, 48, 0.1);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.back-link:hover {
+    color: var(--primary-dark);
+    background: rgba(44, 85, 48, 0.15);
+    transform: translateY(-2px);
+}
+
+.stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 15px 0;
+    background: var(--light);
+    padding: 15px;
+    border-radius: var(--radius);
+    font-weight: 600;
+}
+
+.stat-box {
+    text-align: center;
+    padding: 8px;
+}
+
+.stat-value {
+    font-size: 1.6rem;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--gray);
+    margin-top: 5px;
+}
+
+.flashcard-container {
+    perspective: 1000px;
+    margin: 15px auto;
+    width: 100%;
+    height: 400px; /* Increased height for better content display */
+}
+
+.flashcard {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.flashcard.flipped {
+    transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    padding: 25px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    overflow: hidden; /* Changed from auto to hidden */
+}
+
+/* Improved flashcard colors */
+.flashcard-front {
+    background: linear-gradient(135deg, #1a331a, #2c5530);
+    color: white;
+}
+
+.flashcard-back {
+    background: linear-gradient(135deg, #8B4513, #654321);
+    color: white;
+    transform: rotateY(180deg);
+}
+
+/* NEW: Scrollable content containers */
+.flashcard-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.question-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.scrollable-question {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 10px 5px;
+    display: flex;
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
+    text-align: center;
+}
+
+.question-text {
+    font-size: 1.4rem;
+    font-weight: 600;
+    line-height: 1.6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    width: 100%; /* Ensure full width for proper centering */
+}
+
+.answer-text {
+    font-size: 1.3rem;
+    line-height: 1.6;
+    text-align: center;
+    flex: 1;
+    display: flex;
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
+    padding: 10px;
+    width: 100%; /* Ensure full width */
+}
+
+.concept {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.hint {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.85);
+    margin-top: 12px;
+    font-style: italic;
+}
+
+/* FIXED CONTROLS SECTION */
+.controls {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25px;
+    gap: 10px;
+    width: 100%;
+}
+
+button {
+    padding: 12px 16px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--primary);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(44, 85, 48, 0.2);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-width: 0;
+}
+
+button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(44, 85, 48, 0.3);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+button:disabled {
+    background: var(--gray-light);
+    color: var(--gray);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.btn-previous, .btn-next {
+    max-width: 150px;
+}
+
+.btn-shuffle {
+    background: var(--secondary);
+}
+
+.btn-shuffle:hover {
+    background: #B8860B;
+}
+
+.btn-reset {
+    background: var(--accent);
+}
+
+.btn-reset:hover {
+    background: #1B5E20;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--gray-light);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+
+.info-panel {
+    background: var(--light);
+    padding: 15px;
+    border-radius: var(--radius);
+    margin-top: 20px;
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--gray);
+}
+
+.info-panel strong {
+    color: var(--dark);
+    font-weight: 600;
+}
+
+/* Touch feedback for mobile */
+.touch-active {
+    transform: scale(0.98);
+    opacity: 0.9;
+}
+
+/* Custom scrollbar for webkit browsers */
+.scrollable-question::-webkit-scrollbar {
+    width: 4px;
+}
+
+.scrollable-question::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+.scrollable-question::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* === OPTIMIZED MOBILE SPACE SAVING === */
+@media (max-width: 768px) {
+    .container {
+        max-width: 100%;
+        padding: 15px;
+        margin-top: 0;
+    }
+    
+    body {
+        padding: 5px;
+    }
+    
+    /* Hide chapter title - biggest space saver */
+    h1#chapterTitle {
+        display: none;
+    }
+    
+    /* Keep chapter info but make it compact */
+    .chapter-info {
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        line-height: 1.3;
+    }
+    
+    /* Hide progress bar - good space saver, less crucial on mobile */
+    .progress-bar {
+        display: none;
+    }
+    
+    /* Compact but readable stats */
+    .stats {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 10px 12px;
+        margin: 8px 0 15px 0;
+        flex-wrap: nowrap;
+    }
+    
+    .stat-box {
+        flex: 1;
+        padding: 5px;
+        min-width: 0;
+    }
+    
+    .stat-value {
+        font-size: 1.2rem;
+        margin-bottom: 2px;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Slightly smaller back link */
+    .back-link {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        min-height: 40px;
+        margin-top: 5px;
+    }
+    
+    /* FIXED: Mobile flashcard height and scrolling */
+    .flashcard-container {
+        height: 480px; /* Increased height for mobile */
+        min-height: 480px;
+    }
+    
+    .flashcard-front, .flashcard-back {
+        padding: 15px;
+    }
+    
+    .question-text {
+        font-size: 1.1rem !important;
+        line-height: 1.5;
+    }
+
+    .answer-text {
+        font-size: 1.1rem !important;
+        line-height: 1.5;
+    }
+    
+    .scrollable-question {
+        padding: 5px;
+    }
+    
+    .controls {
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 20px;
+    }
+    
+    button {
+        padding: 12px 10px;
+        font-size: 0.9rem;
+        min-height: 44px;
+    }
+    
+    .btn-previous, .btn-next {
+        flex: 1 1 45%;
+        max-width: none;
+    }
+    
+    .btn-shuffle, .btn-reset {
+        flex: 1 1 45%;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 12px;
+        border-radius: 12px;
+    }
+    
+    /* Extreme space saving for small phones */
+    h1#chapterTitle {
+        display: none;
+    }
+    
+    .progress-bar {
+        display: none;
+    }
+    
+    /* Ultra-compact header */
+    .chapter-info {
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+    
+    .stats {
+        padding: 8px 10px;
+        margin: 5px 0 12px 0;
+    }
+    
+    .stat-value {
+        font-size: 1.1rem;
+    }
+    
+    .stat-label {
+        font-size: 0.65rem;
+    }
+    
+    .back-link {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        min-height: 38px;
+    }
+    
+    /* FIXED: Smaller mobile screens */
+    .flashcard-container {
+        height: 500px; /* Maximum height for content */
+        min-height: 500px;
+        margin: 10px auto;
+    }
+    
+    .flashcard-front, .flashcard-back {
+        padding: 12px;
+    }
+    
+    .question-text {
+        font-size: 1rem !important;
+        line-height: 1.4;
+    }
+    
+    .answer-text {
+        font-size: 1rem !important;
+    }
+    
+    .controls {
+        gap: 6px;
+        margin-top: 20px;
+    }
+    
+    .btn-previous, .btn-next {
+        flex: 1 1 48%;
+    }
+    
+    .btn-shuffle, .btn-reset {
+        flex: 1 1 48%;
+    }
+    
+    button {
+        padding: 10px 8px;
+        font-size: 0.85rem;
+        min-height: 42px;
+    }
+    
+    .info-panel {
+        padding: 12px;
+        font-size: 0.9rem;
+        margin-top: 15px;
+    }
+    
+    .hint {
+        font-size: 0.75rem;
+        margin-top: 8px;
+    }
+    
+    .concept {
+        font-size: 0.8rem;
+        margin-top: 8px;
+    }
+}
+
+@media (max-width: 360px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .stats {
+        padding: 6px 10px;
+    }
+    
+    .stat-value {
+        font-size: 1rem;
+    }
+    
+    .stat-label {
+        font-size: 0.6rem;
+    }
+    
+    .flashcard-container {
+        height: 480px;
+        min-height: 480px;
+    }
+    
+    .flashcard-front, .flashcard-back {
+        padding: 10px;
+    }
+    
+    .question-text {
+        font-size: 0.95rem !important;
+    }
+    
+    .controls {
+        gap: 5px;
+    }
+    
+    button {
+        padding: 8px 6px;
+        font-size: 0.8rem;
+        min-height: 40px;
+    }
+}
+
+/* Prevent zoom on input for iOS */
+@supports (-webkit-touch-callout: none) {
+    .scrollable-question {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* High DPI screen optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .flashcard {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .flashcard {
+        transition: none;
+    }
+    
+    button {
+        transition: none;
+    }
+    
+    .back-link {
+        transition: none;
+    }
+    
+    .progress-fill {
+        transition: none;
+    }
+}
+
+/* IMPROVED Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .container {
+        background: #1e293b;
+        color: #f1f5f9;
+    }
+    
+    .info-panel {
+        background: #334155;
+        color: #cbd5e1;
+    }
+    
+    .info-panel strong {
+        color: #f1f5f9;
+    }
+
+    .stats {
+        background: #334155;
+    }
+
+    .stat-value {
+        color: #4CAF50;
+    }
+
+    .stat-label {
+        color: #94a3b8;
+    }
+
+    .progress-bar {
+        background: #475569;
+    }
+
+    button:disabled {
+        background: #475569;
+        color: #94a3b8;
+    }
+
+    /* Ensure flashcard text remains visible in dark mode */
+    .flashcard-front, .flashcard-back {
+        color: white;
+    }
+
+    .concept, .hint {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .back-link {
+        color: #4CAF50;
+        background: rgba(44, 85, 48, 0.15);
+    }
+
+    .back-link:hover {
+        color: #66BB6A;
+        background: rgba(44, 85, 48, 0.25);
+    }
+}

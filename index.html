@@ -1,927 +1,308 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Building Project Manager - Updated</title>
-<style>
-    :root {
-      --bg: #0e1a2b; --bg-2: #121223a; --panel: #162942; --accent: #1f6feb; --accent-2: #4ea1ff;
-      --text: #e6eefc; --muted: #9fb3cc; --success: #1fbf75; --warn: #f59e0b; --danger: #ef4444;
-      --border: #234059; --radius: 12px; --shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif;
-      color: var(--text); background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
-      min-height: 100vh; line-height: 1.5;
-    }
-    .app { display: flex; min-height: 100vh; }
-    .sidebar {
-      width: 340px; max-width: 100vw; background: var(--panel); border-right: 1px solid var(--border);
-      padding: 20px; display: flex; flex-direction: column; gap: 16px; position: sticky;
-      top: 0; height: 100vh; overflow: hidden; box-shadow: var(--shadow); z-index: 10;
-    }
-    .sidebar-content {
-      display: flex; flex-direction: column; gap: 16px; overflow-y: auto; scrollbar-width: thin;
-      scrollbar-color: var(--accent) var(--panel); padding-right: 4px; flex: 1;
-    }
-    .sidebar-content::-webkit-scrollbar { width: 6px; }
-    .sidebar-content::-webkit-scrollbar-track { background: var(--panel); border-radius: 3px; }
-    .sidebar-content::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
-    .brand {
-      display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: .3px;
-      font-size: 20px; padding: 8px 0; margin-bottom: 8px;
-    }
-    .brand .logo {
-      width: 40px; height: 40px; border-radius: 10px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      display: grid; place-items: center; color: #fff; font-weight: 800;
-      box-shadow: 0 6px 20px rgba(31, 111, 235, 0.35); font-size: 20px;
-    }
-    .toolbar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
-    .toolbar button, .toolbar label[for="importFile"] {
-      background: var(--accent); color: #fff; border: 0; border-radius: var(--radius); padding: 12px 14px;
-      cursor: pointer; font-weight: 600; transition: all 0.2s ease; display: flex;
-      align-items: center; justify-content: center; gap: 6px; font-size: 14px;
-    }
-    .toolbar button:hover, .toolbar label[for="importFile"]:hover { background: var(--accent-2); transform: translateY(-2px); }
-    .toolbar button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    .toolbar button.secondary:hover { background: rgba(255, 255, 255, 0.08); }
-    .search-box { display: flex; flex-direction: column; gap: 10px; }
-    .search-box input, .search-box select {
-      width: 100%; background: #0f1f36; color: var(--text); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 12px; outline: none; font-size: 14px; transition: border-color 0.2s;
-    }
-    .search-box input:focus, .search-box select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(31, 111, 235, 0.2); }
-    .section-title { margin: 16px 0 8px; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .15em; font-weight: 600; }
-    .project-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-    .project-item {
-      border: 1px solid var(--border); background: #0f1f36; border-radius: var(--radius);
-      padding: 16px; cursor: pointer; transition: all 0.2s ease;
-    }
-    .project-item:hover { outline: 2px solid var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
-    .project-item.active { outline: 2px solid var(--accent); background: rgba(31, 111, 235, 0.1); }
-    .project-meta { color: var(--muted); font-size: 13px; margin: 6px 0; }
-    .progress { height: 10px; border-radius: 10px; background: #0b1626; border: 1px solid var(--border); overflow: hidden; margin-top: 10px; }
-    .progress span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.5s ease; border-radius: 10px; }
-    .footer { margin-top: auto; color: var(--muted); font-size: 12px; text-align: center; padding: 16px 0 0; border-top: 1px solid var(--border); }
-    .main { flex: 1; padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; background: var(--bg-2); }
-    .topbar { display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 0 0 16px; border-bottom: 1px solid var(--border); }
-    .view-switch { display: flex; gap: 8px; background: var(--panel); padding: 4px; border-radius: var(--radius); border: 1px solid var(--border); }
-    .view-switch button {
-      background: transparent; border: none; color: var(--text); padding: 10px 18px; border-radius: 8px;
-      cursor: pointer; transition: all 0.2s ease; font-weight: 500;
-    }
-    .view-switch button:hover { background: rgba(255, 255, 255, 0.05); }
-    .view-switch button.active { background: var(--accent); color: white; box-shadow: 0 2px 8px rgba(31, 111, 235, 0.3); }
-    .view-switch button:disabled { opacity: 0.5; cursor: not-allowed; }
-    .view-switch button:disabled:hover { background: transparent; }
-    .banner {
-      display: none; background: #0b1a2f; border: 1px solid var(--border); border-left: 4px solid var(--danger);
-      color: #ffb4b4; border-radius: var(--radius); padding: 16px; align-items: center;
-      justify-content: space-between; gap: 16px; animation: fadeIn 0.5s;
-    }
-    .banner.show { display: flex; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-    .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .card:hover { transform: translateY(-5px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
-    .card h3 { margin-bottom: 16px; font-size: 18px; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-    .muted { color: var(--muted); font-size: 14px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-    .form { display: grid; gap: 16px; grid-template-columns: repeat(2, 1fr); }
-    .form .full { grid-column: 1 / -1; }
-    .form label { font-size: 13px; color: var(--muted); font-weight: 500; display: block; margin-bottom: 6px; }
-    .form input[type="text"], .form textarea, .form input[type="date"] {
-      width: 100%; background: #0f1f36; color: var(--text); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 14px; outline: none; transition: all 0.2s; font-size: 14px;
-    }
-    .form input[type="text"]:focus, .form textarea:focus, .form input[type="date"]:focus {
-      border-color: var(--accent); box-shadow: 0 0 0 2px rgba(31, 111, 235, 0.2);
-    }
-    textarea { min-height: 100px; resize: vertical; font-family: inherit; }
-    .actions { display: flex; gap: 12px; flex-wrap: wrap; }
-    .actions button {
-      background: var(--accent); color: #fff; border: 0; border-radius: var(--radius); padding: 12px 18px;
-      cursor: pointer; font-weight: 600; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px;
-    }
-    .actions button:hover { background: var(--accent-2); transform: translateY(-2px); }
-    .actions button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    .actions button.secondary:hover { background: rgba(255, 255, 255, 0.08); }
-    .steps { display: flex; flex-direction: column; gap: 16px; }
-    .step { border: 1px solid var(--border); border-radius: var(--radius); background: #0f1f36; padding: 16px; transition: all 0.3s ease; }
-    .step:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-    .step-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
-    .tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-    .tag { font-size: 12px; padding: 4px 8px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); font-weight: 500; }
-    .tag.overdue { border-color: var(--danger); color: #ff9b9b; background: rgba(239, 68, 68, 0.1); }
-    .tag.done { border-color: var(--success); color: #b8f5dc; background: rgba(31, 191, 117, 0.1); }
-    .substeps { margin-top: 12px; display: flex; flex-direction: column; gap: 12px; }
-    .substep { border: 1px dashed var(--border); border-radius: var(--radius); padding: 12px; background: #0d1c31; transition: all 0.2s; }
-    .substep:hover { border-style: solid; background: #0f2039; }
-    .inline { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .inline input[type="text"], .inline input[type="date"] {
-      background: #0f243f; border: 1px solid var(--border); color: var(--text);
-      border-radius: var(--radius); padding: 10px 12px; font-size: 14px;
-    }
-    .inline .small { font-size: 13px; color: var(--muted); }
-    .overdue-text { color: #ff9b9b; }
-    .overdue-border { border-color: var(--danger) !important; }
-    .modal-backdrop {
-        position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); display: none;
-        place-items: center; padding: 20px; z-index: 1000; animation: fadeIn 0.3s;
-    }
-    .modal {
-        max-width: 800px; width: 100%; background: #0f1f36; border: 1px solid var(--border);
-        border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); animation: slideIn 0.3s;
-    }
-    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
-    .modal-head h3 { font-size: 20px; color: var(--text); }
-    .modal-body { max-height: 60vh; overflow: auto; padding-right: 8px; }
-    .list { display: flex; flex-direction: column; gap: 12px; }
-    .list .item { background: #0b1a2f; border: 1px solid var(--border); border-left: 4px solid var(--danger); border-radius: var(--radius); padding: 16px; transition: all 0.2s; }
-    .list .item:hover { background: #0c1c32; transform: translateX(4px); }
-    .toast {
-      position: fixed; bottom: 24px; right: 24px; background: var(--panel); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 16px 20px; color: var(--text); box-shadow: var(--shadow);
-      display: flex; align-items: center; gap: 12px; z-index: 1000; transform: translateY(100px);
-      opacity: 0; transition: all 0.3s ease; max-width: 400px;
-    }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.success { border-left: 4px solid var(--success); }
-    .toast.error { border-left: 4px solid var(--danger); }
-    .toast.info { border-left: 4px solid var(--accent); }
-    .toast-message { flex: 1; font-size: 14px; }
-    .toast-close {
-        background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 0;
-        width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
-        border-radius: 50%; transition: all 0.2s;
-    }
-    .toast-close:hover { background: rgba(255, 255, 255, 0.1); color: var(--text); }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes slideIn { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-    @media (max-width: 1100px) {
-        .cards { grid-template-columns: repeat(2, minmax(280px, 1fr)); }
-        .grid, .form { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 900px) {
-        .app { flex-direction: column; }
-        .sidebar { width: 100%; height: auto; position: relative; max-height: 40vh; }
-        .main { padding: 20px; }
-        .toolbar { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 600px) {
-        .main { padding: 16px; }
-        .cards { grid-template-columns: 1fr; }
-        .topbar { flex-direction: column; align-items: stretch; gap: 12px; }
-        .view-switch { width: 100%; }
-        .banner { flex-direction: column; text-align: center; }
-        .modal { padding: 16px; }
-        .toast { left: 16px; right: 16px; max-width: none; }
-    }
-    .text-center { text-align: center; }
-    .mb-1 { margin-bottom: 8px; } .mb-2 { margin-bottom: 16px; } .mt-2 { margin-top: 16px; }
-    .pulse { animation: pulse 2s infinite; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upanishads - Ancient Wisdom Through Flashcards</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="upanishad_styles.css">
+    <style>
+        /* Welcome Overlay Styles */
+        .welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2c5530 0%, #1a331a 100%);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .welcome-overlay.hidden {
+            display: none;
+        }
+
+        .welcome-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 3px solid #d4af37;
+        }
+
+        .welcome-content {
+            text-align: center;
+        }
+
+        .welcome-icon {
+            font-size: 4rem;
+            color: #2c5530;
+            margin-bottom: 20px;
+        }
+
+        .welcome-content h1 {
+            color: #1a331a;
+            font-size: 2.5rem;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        .welcome-text {
+            text-align: left;
+            margin-bottom: 35px;
+            line-height: 1.7;
+            color: #444;
+            font-size: 1.1rem;
+        }
+
+        .welcome-text p {
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+
+        .immerse-button {
+            background: linear-gradient(135deg, #2c5530, #d4af37);
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(44, 85, 48, 0.4);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .immerse-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(44, 85, 48, 0.6);
+        }
+    </style>
 </head>
 <body>
-    <div class="app">
-        <aside class="sidebar">
-            <div class="brand"><div class="logo">BP</div><div>Building Projects</div></div>
-            <div class="sidebar-content">
-                <div class="toolbar">
-                    <button id="btnNewProject" type="button" title="New Project"><span>New Project</span></button>
-                    <button id="btnDashboard" type="button" class="secondary" title="Dashboard"><span>Dashboard</span></button>
-                    <button id="btnExport" type="button" class="secondary" title="Export JSON"><span>Export</span></button>
-                    <input id="importFile" type="file" accept="application/json" style="display:none;" />
-                    <label for="importFile" class="secondary" style="display:flex;align-items:center;justify-content:center;"><span>Import</span></label>
+    <!-- Welcome Overlay -->
+    <div id="welcomeOverlay" class="welcome-overlay">
+        <div class="welcome-container">
+            <div class="welcome-content">
+                <div class="welcome-icon">
+                    <i class="fas fa-om"></i>
                 </div>
-                <div class="search-box">
-                    <input id="searchInput" type="text" placeholder="Search projects or steps...">
-                    <select id="statusFilter">
-                        <option value="all">All Statuses</option>
-                        <option value="pending">In Progress</option>
-                        <option value="done">Completed</option>
-                        <option value="overdue">Overdue</option>
-                    </select>
+                <h1>Welcome to Upanishadic Wisdom</h1>
+                <div class="welcome-text">
+                    <p>The Upanishads are the philosophical essence of the Vedas, forming the foundation of Hindu spiritual thought. These ancient texts explore the nature of reality, consciousness, and the ultimate truth (Brahman).</p>
+                    
+                    <p>Composed between 800-200 BCE, the Upanishads contain profound dialogues between teachers and students, addressing fundamental questions about existence, the self, and liberation. They introduce key concepts like Atman (the true self), Brahman (ultimate reality), Maya (illusion), and Moksha (liberation).</p>
+                    
+                    <p>This flashcard program systematically presents the wisdom of the Upanishads through carefully structured questions and answers. You'll explore their historical context, philosophical teachings, spiritual practices, and enduring relevance to modern life.</p>
                 </div>
-                <div class="section-title">Your Projects</div>
-                <div id="projectList" class="project-list"></div>
-                <div class="footer">
-                    Data is stored locally in your browser.
-                    <br>&copy; 2025 Anil Kumar VT
-                </div>
+                <button id="enterSite" class="immerse-button">
+                    Explore Upanishadic Wisdom
+                    <i class="fas fa-arrow-right"></i>
+                </button>
             </div>
-        </aside>
-
-        <main class="main">
-            <div class="topbar">
-                <div class="view-switch">
-                    <button id="viewDashboard" type="button" class="active">Dashboard</button>
-                    <button id="viewProject" type="button">Project Details</button>
-                </div>
-                <div id="overdueBanner" class="banner">
-                    <div><strong>Overdue</strong> items detected.</div>
-                    <div class="actions">
-                        <button id="btnViewOverdue" type="button" class="secondary">View List</button>
-                        <button id="btnDismissOverdue" type="button" class="secondary">Dismiss</button>
-                    </div>
-                </div>
-            </div>
-
-            <section id="dashboardView">
-                <div id="dashboardCards" class="cards"></div>
-            </section>
-
-            <section id="projectView" style="display:none;">
-                <div class="card">
-                    <h3>Project Details</h3>
-                    <div class="form">
-                        <div class="full"><label>Project Name</label><input id="projName" type="text" placeholder="e.g., Downtown Office Block"></div>
-                        <div><label>Start Date</label><div class="inline"><input id="projStart" type="date"><button id="btnSetStartToday" type="button" class="secondary">Today</button></div></div>
-                        <div><label>Due Date</label><div class="inline"><input id="projDue" type="date"><button id="btnSetDueToday" type="button" class="secondary">Today</button></div></div>
-                        <div class="full"><label>Description</label><textarea id="projDesc" placeholder="Project goals, location, stakeholders..."></textarea></div>
-                    </div>
-                    <div class="actions" style="margin-top:16px;">
-                        <button id="btnSaveProject" type="button">Save Project</button>
-                        <button id="btnDeleteProject" type="button" class="secondary">Delete Project</button>
-                    </div>
-                </div>
-
-                <div class="grid">
-                    <div class="card">
-                        <h3>Add Major Step</h3>
-                        <div class="form">
-                            <div class="full"><label>Step Name</label><input id="stepName" type="text" placeholder="e.g., Foundation Work"></div>
-                            <div class="full"><label>Due Date</label><div class="inline"><input id="stepDue" type="date"><button id="btnStepDueToday" type="button" class="secondary">Today</button></div></div>
-                            <div class="full actions"><button id="btnAddStep" type="button">Add Step</button></div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h3>Add Sub-step</h3>
-                        <div class="form">
-                            <div class="full"><label>Parent Step</label><select id="parentStepSelect"></select></div>
-                            <div class="full"><label>Sub-step Name</label><input id="subName" type="text" placeholder="e.g., Site Preparation"></div>
-                            <div class="full"><label>Due Date</label><div class="inline"><input id="subDue" type="date"><button id="btnSubDueToday" type="button" class="secondary">Today</button></div></div>
-                            <div class="full actions"><button id="btnAddSub" type="button">Add Sub-step</button></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h3>Project Steps</h3>
-                    <div id="steps" class="steps"></div>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <div id="modalBackdrop" class="modal-backdrop">
-        <div class="modal">
-            <div class="modal-head"><h3>Overdue Items</h3><button id="modalClose" type="button" class="secondary">Close</button></div>
-            <div class="modal-body"><div id="overdueList" class="list"></div></div>
         </div>
     </div>
 
-    <div id="toast" class="toast">
-        <span id="toastMessage" class="toast-message"></span>
-        <button id="toastClose" type="button" class="toast-close">&times;</button>
+    <!-- Main App Content -->
+    <div class="app-container" id="mainApp">
+        <div class="content-header">
+            <div class="header-left">
+                <div class="main-title">The Upanishads</div>
+                <div class="main-subtitle">Ancient wisdom through flashcards</div>
+            </div>
+            <div class="header-right">
+                <img src="upanishad_cover.png" alt="Upanishads Logo" class="header-logo">
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="welcome-section">
+                <div class="stats-section">
+                    <div class="stat-card"><div class="stat-number">10</div><div class="stat-label">Chapters</div></div>
+                    <div class="stat-card"><div class="stat-number">1000+</div><div class="stat-label">Concepts</div></div>
+                    <div class="stat-card"><div class="stat-number">100%</div><div class="stat-label">Wisdom</div></div>
+                    <div class="stat-card"><div class="stat-number">Free</div><div class="stat-label">Access</div></div>
+                </div>
+            </div>
+
+            <div id="resume-container" style="display: none;">
+                <a href="#" id="resume-link" class="resume-button-simple">
+                    <div class="resume-simple-content">
+                        <div class="resume-icon">↻</div>
+                        <div class="resume-text">
+                            <div class="resume-title">Welcome back!</div>
+                            <div class="resume-subtitle">Continue your spiritual journey</div>
+                        </div>
+                        <div class="resume-arrow">→</div>
+                    </div>
+                </a>
+            </div>
+
+            <h2 class="section-title">Select a chapter to explore Upanishadic wisdom</h2>
+            
+            <div class="chapters-grid" id="chaptersGrid">
+                <!-- Chapters will be loaded here -->
+            </div>
+            
+            <div class="published-section">
+                <h2 class="published-title">Our Other Collections</h2>
+                <p class="published-subtitle">Explore our other educational collections to expand your knowledge</p>
+                
+                <div class="published-grid">
+                    <div class="published-card" data-url="https://gita.worksmartinfinite.org/">
+                        <div class="published-title-text">Bhagavad Gita</div>
+                        <div class="published-desc">700 verses across 18 chapters</div>
+                    </div>
+                    <div class="published-card" data-url="https://constitution.flashlearn.win/">
+                        <div class="published-title-text">Indian Constitution</div>
+                        <div class="published-desc">25 chapters with 4100+ flashcards</div>
+                    </div>
+                    <div class="published-card" data-url="https://gst.flashlearn.win/">
+                        <div class="published-title-text">Goods and Services Tax</div>
+                        <div class="published-desc">Complete GST concepts and procedures</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="coming-soon-section">
+                <h2 class="coming-soon-title">More Spiritual Texts Coming Soon</h2>
+                <p class="coming-soon-subtitle">Expand your spiritual knowledge with our upcoming collections</p>
+                
+                <div class="subjects-grid">
+                    <div class="subject-card">
+                        <div class="subject-title">Vedas</div>
+                        <div class="subject-desc">Ancient scriptures of spiritual knowledge</div>
+                    </div>
+                    <div class="subject-card">
+                        <div class="subject-title">Puranas</div>
+                        <div class="subject-desc">Ancient mythological texts</div>
+                    </div>
+                    <div class="subject-card">
+                        <div class="subject-title">Yoga Sutras</div>
+                        <div class="subject-desc">Patanjali's guide to yoga practice</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <a href="https://worksmartinfinite.org" class="floating-home-btn" title="Go to worksmartinfinite Homepage">
+            <i class="fas fa-home"></i>
+        </a>
+        
+        <footer>
+            <p>Made with <i class="fas fa-heart heart"></i> by Anil Kumar VT | Dedicated to Spiritual Enlightenment, Completely Ad-Free.</p>
+        </footer>
     </div>
 
-<script>
-// --- IIFE to encapsulate the entire application ---
-(function() {
-    'use strict';
+    <script>
+        // Simple and direct approach
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded - starting initialization');
+            
+            // Chapter data
+            const chapters = [
+                { file: "upanishad_template.html?chap=01", name: "Chapter 1: Introduction to Upanishads", icon: "fas fa-book-open", description: "Origins, meaning, and significance", cardCount: 25 },
+                { file: "upanishad_template.html?chap=02", name: "Chapter 2: Principal Upanishads", icon: "fas fa-star", description: "Major Upanishads and their contributions", cardCount: 20 },
+                { file: "upanishad_template.html?chap=03", name: "Chapter 3: Metaphysical Concepts", icon: "fas fa-atom", description: "Brahman, Atman, and cosmic principles", cardCount: 25 },
+                { file: "upanishad_template.html?chap=04", name: "Chapter 4: Philosophical Framework", icon: "fas fa-brain", description: "Core teachings and worldviews", cardCount: 25 },
+                { file: "upanishad_template.html?chap=05", name: "Chapter 5: Spiritual Practices", icon: "fas fa-spa", description: "Meditation, yoga, and self-realization", cardCount: 20 },
+                { file: "upanishad_template.html?chap=06", name: "Chapter 6: Ethical Teachings", icon: "fas fa-balance-scale", description: "Dharma, karma, and moral principles", cardCount: 20 },
+                { file: "upanishad_template.html?chap=07", name: "Chapter 7: Cosmology & Creation", icon: "fas fa-globe", description: "Universe origins and cosmic order", cardCount: 20 },
+                { file: "upanishad_template.html?chap=08", name: "Chapter 8: Psychology of Consciousness", icon: "fas fa-mind", description: "Mind, senses, and states of awareness", cardCount: 25 },
+                { file: "upanishad_template.html?chap=09", name: "Chapter 9: Modern Relevance", icon: "fas fa-lightbulb", description: "Applications in contemporary life", cardCount: 20 },
+                { file: "upanishad_template.html?chap=10", name: "Chapter 10: Comparative Study", icon: "fas fa-exchange-alt", description: "Upanishads and other traditions", cardCount: 20 }
+            ];
 
-    // --- State Management ---
-    let projects = [];
-    let currentProjectId = null;
-    let currentView = 'dashboard';
+            // Render chapters immediately
+            function renderChapters() {
+                const chaptersGrid = document.getElementById('chaptersGrid');
+                if (!chaptersGrid) {
+                    console.error('ERROR: chaptersGrid element not found!');
+                    return;
+                }
+                
+                console.log('Rendering chapters...');
+                let chaptersHTML = '';
+                
+                chapters.forEach((chapter, index) => {
+                    const chapterNumber = String(index + 1).padStart(2, '0');
+                    const chapterFile = `upanishad_template.html?chap=${chapterNumber}`;
+                    
+                    chaptersHTML += `
+                        <div class="chapter-card" data-file="${chapterFile}">
+                            <div class="chapter-icon">
+                                <i class="${chapter.icon}"></i>
+                            </div>
+                            <div class="chapter-title">${chapter.name}</div>
+                            <div class="chapter-desc">${chapter.description}</div>
+                            <div class="chapter-count">${chapter.cardCount} cards</div>
+                        </div>
+                    `;
+                });
+                
+                chaptersGrid.innerHTML = chaptersHTML;
+                console.log('Chapters rendered successfully!');
+                
+                // Add click events
+                document.querySelectorAll('.chapter-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        const file = this.getAttribute('data-file');
+                        window.location.href = file;
+                    });
+                });
+            }
 
-    // --- DOM Elements ---
-    const dom = {
-        app: document.querySelector('.app'),
-        projectList: document.getElementById('projectList'),
-        searchInput: document.getElementById('searchInput'),
-        statusFilter: document.getElementById('statusFilter'),
-        dashboardView: document.getElementById('dashboardView'),
-        projectView: document.getElementById('projectView'),
-        dashboardCards: document.getElementById('dashboardCards'),
-        viewDashboard: document.getElementById('viewDashboard'),
-        viewProject: document.getElementById('viewProject'),
-        projName: document.getElementById('projName'),
-        projStart: document.getElementById('projStart'),
-        projDue: document.getElementById('projDue'),
-        projDesc: document.getElementById('projDesc'),
-        steps: document.getElementById('steps'),
-        stepName: document.getElementById('stepName'),
-        stepDue: document.getElementById('stepDue'),
-        parentStepSelect: document.getElementById('parentStepSelect'),
-        subName: document.getElementById('subName'),
-        subDue: document.getElementById('subDue'),
-        overdueBanner: document.getElementById('overdueBanner'),
-        modalBackdrop: document.getElementById('modalBackdrop'),
-        overdueList: document.getElementById('overdueList'),
-        toast: document.getElementById('toast'),
-        toastMessage: document.getElementById('toastMessage'),
-    };
+            // Welcome screen logic
+            const welcomeOverlay = document.getElementById('welcomeOverlay');
+            const mainApp = document.getElementById('mainApp');
+            const enterButton = document.getElementById('enterSite');
 
-    // --- Utility Functions ---
-    const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
+            // Check if user has seen welcome before
+            const hasSeenWelcome = localStorage.getItem('upanishad_welcome_seen');
+            
+            if (hasSeenWelcome) {
+                console.log('User has seen welcome before - hiding welcome screen');
+                welcomeOverlay.style.display = 'none';
+                mainApp.style.display = 'block';
+                renderChapters();
+            } else {
+                console.log('First time user - showing welcome screen');
+                welcomeOverlay.style.display = 'flex';
+                mainApp.style.display = 'none';
+                
+                // Handle enter button click
+                enterButton.addEventListener('click', function() {
+                    console.log('Enter button clicked');
+                    welcomeOverlay.style.display = 'none';
+                    mainApp.style.display = 'block';
+                    localStorage.setItem('upanishad_welcome_seen', 'true');
+                    renderChapters();
+                });
+            }
 
-    const formatDateForInput = (date) => {
-        if (!(date instanceof Date) || isNaN(date)) return '';
-        return date.toISOString().split('T')[0];
-    };
-
-    const formatDateForDisplay = (date) => {
-        if (!(date instanceof Date) || isNaN(date)) return '';
-        return date.toLocaleDateString('en-GB'); // DD/MM/YYYY
-    };
-    
-    const parseDateFromInput = (dateString) => {
-        if (!dateString) return null;
-        const date = new Date(dateString);
-        return isNaN(date) ? null : date;
-    };
-
-    const parseDateFromDisplay = (dateString) => {
-        if (!dateString) return null;
-        const parts = dateString.split('/');
-        if (parts.length !== 3) return null;
-        // new Date(year, monthIndex, day)
-        const date = new Date(parts[2], parts[1] - 1, parts[0]);
-        return isNaN(date) ? null : date;
-    };
-    
-    // **FIXED**: More robust overdue check
-    const isDateOverdue = (dateString) => {
-        if (!dateString) return false;
-        const dueDate = parseDateFromDisplay(dateString);
-        if (!dueDate) return false;
-        
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        dueDate.setHours(0, 0, 0, 0);
-
-        return dueDate < today;
-    };
-
-    const showToast = (message, type = 'info') => {
-        dom.toastMessage.textContent = message;
-        dom.toast.className = `toast ${type} show`;
-        setTimeout(() => dom.toast.classList.remove('show'), 3000);
-    };
-
-    // **IMPROVEMENT**: Debounce function for performance
-    const debounce = (func, delay) => {
-        let timeoutId;
-        return (...args) => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => func.apply(this, args), delay);
-        };
-    };
-
-    // --- Data Management ---
-    const saveProjects = () => {
-        try {
-            localStorage.setItem('buildingProjects', JSON.stringify(projects));
-        } catch (e) {
-            console.error("Failed to save projects to localStorage", e);
-            showToast("Error saving data. Storage may be full.", "error");
-        }
-    };
-    
-    // **IMPROVEMENT**: Use debounced save for better performance
-    const saveProjectsDebounced = debounce(saveProjects, 500);
-
-    const loadProjects = () => {
-        try {
-            const storedProjects = localStorage.getItem('buildingProjects');
-            projects = storedProjects ? JSON.parse(storedProjects) : [];
-        } catch (e) {
-            console.error("Failed to load projects from localStorage", e);
-            projects = [];
-            showToast("Could not load data. Starting fresh.", "error");
-        }
-    };
-
-    const getProject = (id) => projects.find(p => p.id === id);
-    const getStep = (project, stepId) => project?.steps.find(s => s.id === stepId);
-    const getSubStep = (step, subStepId) => step?.subSteps.find(ss => ss.id === subStepId);
-
-    const createProject = (name, startDate, dueDate, description) => {
-        const project = {
-            id: generateId(),
-            name,
-            startDate: startDate ? formatDateForDisplay(startDate) : null,
-            dueDate: dueDate ? formatDateForDisplay(dueDate) : null,
-            description,
-            steps: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
-        projects.unshift(project);
-        saveProjects(); // Save immediately for new projects
-        return project;
-    };
-    
-    // **FIXED**: Correctly pass updates object
-    const updateProject = (id, updates) => {
-        const project = getProject(id);
-        if (!project) return null;
-        Object.assign(project, updates);
-        project.updatedAt = new Date().toISOString();
-        if (updates.startDate instanceof Date) project.startDate = formatDateForDisplay(updates.startDate);
-        if (updates.dueDate instanceof Date) project.dueDate = formatDateForDisplay(updates.dueDate);
-        saveProjectsDebounced();
-        return project;
-    };
-
-    const deleteProject = (id) => {
-        projects = projects.filter(p => p.id !== id);
-        if (currentProjectId === id) {
-            currentProjectId = null;
-        }
-        saveProjects();
-    };
-
-    const addStep = (projectId, name, dueDate) => {
-        const project = getProject(projectId);
-        if (!project) return;
-        const step = {
-            id: generateId(), name, completed: false,
-            dueDate: dueDate ? formatDateForDisplay(dueDate) : null,
-            subSteps: [],
-        };
-        project.steps.push(step);
-        project.updatedAt = new Date().toISOString();
-        saveProjectsDebounced();
-    };
-
-    const deleteStep = (projectId, stepId) => {
-        const project = getProject(projectId);
-        if (!project) return;
-        project.steps = project.steps.filter(s => s.id !== stepId);
-        project.updatedAt = new Date().toISOString();
-        saveProjectsDebounced();
-    };
-    
-    // **FIXED**: Correct completion logic
-    const toggleStepCompletion = (projectId, stepId) => {
-        const project = getProject(projectId);
-        const step = getStep(project, stepId);
-        if (!step) return;
-        step.completed = !step.completed;
-        // Propagate change to all sub-steps
-        step.subSteps.forEach(ss => ss.completed = step.completed);
-        project.updatedAt = new Date().toISOString();
-        saveProjectsDebounced();
-    };
-    
-    const addSubStep = (projectId, stepId, name, dueDate) => {
-        const project = getProject(projectId);
-        const step = getStep(project, stepId);
-        if (!step) return;
-        const subStep = {
-            id: generateId(), name, completed: false,
-            dueDate: dueDate ? formatDateForDisplay(dueDate) : null,
-        };
-        step.subSteps.push(subStep);
-        project.updatedAt = new Date().toISOString();
-        saveProjectsDebounced();
-    };
-
-    const deleteSubStep = (projectId, stepId, subStepId) => {
-        const project = getProject(projectId);
-        const step = getStep(project, stepId);
-        if (!step) return;
-        step.subSteps = step.subSteps.filter(ss => ss.id !== subStepId);
-        project.updatedAt = new Date().toISOString();
-        saveProjectsDebounced();
-    };
-    
-    // **FIXED**: Correct completion logic
-    const toggleSubStepCompletion = (projectId, stepId, subStepId) => {
-        const project = getProject(projectId);
-        const step = getStep(project, stepId);
-        const subStep = getSubStep(step, subStepId);
-        if (!subStep) return;
-        subStep.completed = !subStep.completed;
-        // Update parent step based on sub-steps
-        step.completed = step.subSteps.length > 0 && step.subSteps.every(ss => ss.completed);
-        project.updatedAt = new Date().toISOString();
-        saveProjectsDebounced();
-    };
-    
-    // --- Business Logic ---
-    const getProjectProgress = (project) => {
-        const totalItems = project.steps.reduce((acc, step) => acc + 1 + step.subSteps.length, 0);
-        if (totalItems === 0) return 0;
-        const completedItems = project.steps.reduce((acc, step) => {
-            if (step.completed) acc++;
-            acc += step.subSteps.filter(ss => ss.completed).length;
-            return acc;
-        }, 0);
-        return Math.round((completedItems / totalItems) * 100);
-    };
-
-    const getOverdueItems = () => {
-        const items = [];
-        projects.forEach(p => {
-            if (!p.completed && isDateOverdue(p.dueDate)) items.push({ ...p, type: 'Project' });
-            p.steps.forEach(s => {
-                if (!s.completed && isDateOverdue(s.dueDate)) items.push({ ...s, type: 'Step', projectId: p.id, projectName: p.name });
-                s.subSteps.forEach(ss => {
-                    if (!ss.completed && isDateOverdue(ss.dueDate)) items.push({ ...ss, type: 'Sub-step', projectId: p.id, projectName: p.name });
+            // Setup published cards
+            document.querySelectorAll('.published-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const url = this.getAttribute('data-url');
+                    window.open(url, '_blank');
                 });
             });
+
+            console.log('Initialization complete');
         });
-        return items;
-    };
-    
-    // --- Rendering Functions ---
-    // **IMPROVEMENT**: More efficient rendering, no inline event listeners
-    const renderProjectList = () => {
-        const searchTerm = dom.searchInput.value.toLowerCase();
-        const status = dom.statusFilter.value;
-
-        const filtered = projects.filter(p => {
-            const matchesSearch = p.name.toLowerCase().includes(searchTerm) || (p.description && p.description.toLowerCase().includes(searchTerm));
-            if (!matchesSearch) return false;
-            
-            if (status === 'all') return true;
-            const progress = getProjectProgress(p);
-            if (status === 'done') return progress === 100;
-            if (status === 'pending') return progress < 100;
-            if (status === 'overdue') return getOverdueItems().some(item => item.id === p.id);
-            return true;
-        });
-
-        dom.projectList.innerHTML = filtered.length ? filtered.map(p => {
-            const progress = getProjectProgress(p);
-            const isActive = p.id === currentProjectId;
-            return `
-                <div class="project-item ${isActive ? 'active' : ''}" data-id="${p.id}">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                        <strong>${p.name}</strong>
-                        <div style="font-size:14px; font-weight:600; color:${progress === 100 ? 'var(--success)' : 'var(--accent)'}">${progress}%</div>
-                    </div>
-                    <div class="project-meta">
-                        ${p.dueDate ? `Due: ${p.dueDate}` : 'No due date'}
-                        ${isDateOverdue(p.dueDate) && progress < 100 ? '<span class="overdue-text" style="margin-left:8px;">Overdue</span>' : ''}
-                    </div>
-                    <div class="progress"><span style="width:${progress}%"></span></div>
-                </div>
-            `;
-        }).join('') : '<div class="text-center muted" style="padding:20px;">No projects found.</div>';
-    };
-
-    const renderDashboard = () => {
-        const total = projects.length;
-        const completed = projects.filter(p => getProjectProgress(p) === 100).length;
-        const overdue = getOverdueItems();
-
-        dom.dashboardCards.innerHTML = `
-            <div class="card">
-                <h3>Summary</h3>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-                    ${summaryCard(total, "Total Projects", "var(--accent)")}
-                    ${summaryCard(completed, "Completed", "var(--success)")}
-                    ${summaryCard(total - completed, "In Progress", "var(--warn)")}
-                    ${summaryCard(overdue.length, "Overdue", "var(--danger)")}
-                </div>
-            </div>
-            <div class="card"><h3>Recent Projects</h3><div class="list">${
-                projects.slice(0, 5).map(p => `
-                    <div class="item" style="cursor:pointer" data-id="${p.id}" data-action="select-project">
-                        <div style="display:flex; justify-content:space-between;">
-                            <strong>${p.name}</strong>
-                            <span>${getProjectProgress(p)}%</span>
-                        </div>
-                        <div class="muted" style="font-size:13px; margin-top:4px;">Updated: ${new Date(p.updatedAt).toLocaleDateString()}</div>
-                    </div>
-                `).join('') || '<p class="muted">No recent projects.</p>'
-            }</div></div>
-            <div class="card"><h3>Overdue Items</h3><div class="list">${
-                overdue.slice(0, 5).map(item => `
-                    <div class="item" style="cursor:pointer" data-id="${item.projectId}" data-action="select-project">
-                        <strong>${item.name} (${item.type})</strong>
-                        <div class="muted" style="font-size:13px; margin-top:4px;">Due: ${item.dueDate}</div>
-                    </div>
-                `).join('') || '<p class="muted">No overdue items. Great job!</p>'
-            }</div></div>
-        `;
-        
-        dom.overdueBanner.classList.toggle('show', overdue.length > 0);
-    };
-    
-    const summaryCard = (value, label, color) => `
-        <div style="text-align:center; padding:16px; background:rgba(from ${color} r g b / 0.1); border-radius:var(--radius);">
-            <div style="font-size:28px; font-weight:800; color:${color};">${value}</div>
-            <div class="muted">${label}</div>
-        </div>`;
-    
-    // **IMPROVEMENT**: More efficient rendering
-    const renderSteps = () => {
-        const project = getProject(currentProjectId);
-        if (!project) {
-            dom.steps.innerHTML = ''; return;
-        }
-
-        dom.steps.innerHTML = project.steps.length ? project.steps.map(step => {
-            const isOverdue = !step.completed && isDateOverdue(step.dueDate);
-            return `
-            <div class="step ${isOverdue ? 'overdue-border' : ''}" data-step-id="${step.id}">
-                <div class="step-head">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <input type="checkbox" data-action="toggle-step" ${step.completed ? 'checked' : ''} style="width:18px;height:18px;">
-                        <strong>${step.name}</strong>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        ${step.dueDate ? `<div class="muted ${isOverdue ? 'overdue-text' : ''}" style="font-size:13px;">Due: ${step.dueDate}</div>` : ''}
-                        <button class="secondary" style="padding:6px 10px; font-size:13px;" data-action="delete-step">Delete</button>
-                    </div>
-                </div>
-                ${step.subSteps.length > 0 ? `
-                    <div class="substeps">
-                    ${step.subSteps.map(ss => {
-                        const isSubOverdue = !ss.completed && isDateOverdue(ss.dueDate);
-                        return `
-                        <div class="substep ${isSubOverdue ? 'overdue-border' : ''}" data-substep-id="${ss.id}">
-                             <div style="display:flex; align-items:center; gap:10px;">
-                                <input type="checkbox" data-action="toggle-substep" ${ss.completed ? 'checked' : ''} style="width:16px;height:16px;">
-                                <div style="flex:1;">
-                                    <div>${ss.name}</div>
-                                    ${ss.dueDate ? `<div class="muted ${isSubOverdue ? 'overdue-text' : ''}" style="font-size:12px;">Due: ${ss.dueDate}</div>` : ''}
-                                </div>
-                                <button class="secondary" style="padding:4px 8px;font-size:12px;" data-action="delete-substep">Delete</button>
-                            </div>
-                        </div>
-                        `}).join('')}
-                    </div>
-                ` : ''}
-            </div>
-        `}).join('') : '<div class="text-center muted" style="padding:20px;">No steps yet.</div>';
-    };
-
-    const renderProjectDetails = () => {
-        const project = getProject(currentProjectId);
-        if (!project) {
-            dom.projectView.style.display = 'none';
-            switchView('dashboard');
-            return;
-        }
-        dom.projName.value = project.name;
-        dom.projStart.value = project.startDate ? formatDateForInput(parseDateFromDisplay(project.startDate)) : '';
-        dom.projDue.value = project.dueDate ? formatDateForInput(parseDateFromDisplay(project.dueDate)) : '';
-        dom.projDesc.value = project.description || '';
-        
-        updateParentStepDropdown();
-        renderSteps();
-    };
-
-    const updateParentStepDropdown = () => {
-        const project = getProject(currentProjectId);
-        dom.parentStepSelect.innerHTML = project?.steps.map(s => `<option value="${s.id}">${s.name}</option>`).join('') 
-            || '<option disabled>No major steps available</option>';
-    };
-
-    const showOverdueModal = () => {
-        const items = getOverdueItems();
-        dom.overdueList.innerHTML = items.length ? items.map(item => `
-            <div class="item" style="cursor:pointer" data-id="${item.projectId}" data-action="select-project">
-                <strong>${item.name} (${item.type})</strong>
-                <div class="muted" style="font-size: 13px; margin-top: 4px;">Due: ${item.dueDate} | Project: ${item.projectName || getProject(item.projectId)?.name}</div>
-            </div>
-        `).join('') : '<p class="muted">No overdue items.</p>';
-        dom.modalBackdrop.style.display = 'grid';
-    };
-
-    // --- View Management ---
-    const switchView = (view) => {
-        currentView = view;
-        dom.dashboardView.style.display = view === 'dashboard' ? 'block' : 'none';
-        dom.projectView.style.display = view === 'project' ? 'block' : 'none';
-        dom.viewDashboard.classList.toggle('active', view === 'dashboard');
-        dom.viewProject.classList.toggle('active', view === 'project');
-
-        if (view === 'dashboard') {
-            currentProjectId = null;
-            renderDashboard();
-            renderProjectList();
-        } else if (view === 'project') {
-            if (currentProjectId) {
-                renderProjectDetails();
-            } else {
-                 dom.projectView.innerHTML = '<div class="text-center muted" style="padding:40px;">Select a project to see details.</div>';
-            }
-        }
-    };
-    
-    // --- Event Handlers ---
-    const handleSelectProject = (id) => {
-        currentProjectId = id;
-        switchView('project');
-        renderProjectList();
-    };
-
-    const handleSaveProject = () => {
-        if (!currentProjectId) return showToast("No project selected.", "error");
-        const name = dom.projName.value.trim();
-        if (!name) return showToast("Project name is required.", "error");
-        const startDate = parseDateFromInput(dom.projStart.value);
-        const dueDate = parseDateFromInput(dom.projDue.value);
-        if (startDate && dueDate && startDate > dueDate) {
-            return showToast("Start date cannot be after due date.", "error");
-        }
-        updateProject(currentProjectId, {
-            name,
-            startDate,
-            dueDate,
-            description: dom.projDesc.value.trim()
-        });
-        showToast("Project saved.", "success");
-        renderProjectList();
-    };
-
-    const handleDeleteProject = () => {
-        if (!currentProjectId || !confirm("Delete this project and all its steps? This cannot be undone.")) return;
-        deleteProject(currentProjectId);
-        showToast("Project deleted.", "success");
-        switchView('dashboard');
-    };
-
-    const handleNewProject = () => {
-        const project = createProject("New Project", new Date(), null, "");
-        handleSelectProject(project.id);
-    };
-
-    const handleAddStep = () => {
-        if (!currentProjectId) return showToast("Please select a project first.", "error");
-        const name = dom.stepName.value.trim();
-        if (!name) return showToast("Step name is required.", "error");
-        const dueDate = parseDateFromInput(dom.stepDue.value);
-        addStep(currentProjectId, name, dueDate);
-        dom.stepName.value = '';
-        dom.stepDue.value = '';
-        renderSteps();
-        updateParentStepDropdown();
-        showToast("Step added.", "success");
-    };
-
-    const handleAddSubStep = () => {
-        if (!currentProjectId) return showToast("Please select a project first.", "error");
-        const stepId = dom.parentStepSelect.value;
-        const name = dom.subName.value.trim();
-        if (!name) return showToast("Sub-step name is required.", "error");
-        const dueDate = parseDateFromInput(dom.subDue.value);
-        addSubStep(currentProjectId, stepId, name, dueDate);
-        dom.subName.value = '';
-        dom.subDue.value = '';
-        renderSteps();
-        showToast("Sub-step added.", "success");
-    };
-    
-    const handleExport = () => {
-        const dataStr = JSON.stringify(projects, null, 2);
-        const blob = new Blob([dataStr], {type: "application/json"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'building-projects-backup.json';
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast("Projects exported.", "success");
-    };
-
-    const handleImport = (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const imported = JSON.parse(e.target.result);
-                if (!Array.isArray(imported)) throw new Error("Invalid format");
-                if (confirm(`This will replace all current projects. Are you sure?`)) {
-                    projects = imported;
-                    saveProjects();
-                    currentProjectId = null;
-                    switchView('dashboard');
-                    showToast("Projects imported successfully.", "success");
-                }
-            } catch {
-                showToast("Import failed. Invalid file format.", "error");
-            } finally {
-                event.target.value = ''; // Allow re-importing same file
-            }
-        };
-        reader.readAsText(file);
-    };
-
-    // --- Event Listeners Setup ---
-    // **IMPROVEMENT**: Centralized event delegation
-    const initEventListeners = () => {
-        // Sidebar and main view clicks
-        dom.app.addEventListener('click', (e) => {
-            const target = e.target;
-            const action = target.dataset.action;
-            const id = target.closest('[data-id]')?.dataset.id;
-            
-            if (target.closest('#btnNewProject')) return handleNewProject();
-            if (target.closest('#btnDashboard')) return switchView('dashboard');
-            if (target.closest('#btnExport')) return handleExport();
-            if (target.closest('#btnSaveProject')) return handleSaveProject();
-            if (target.closest('#btnDeleteProject')) return handleDeleteProject();
-            if (target.closest('#btnAddStep')) return handleAddStep();
-            if (target.closest('#btnAddSub')) return handleAddSubStep();
-            if (target.closest('#viewDashboard')) return switchView('dashboard');
-            if (target.closest('#viewProject') && currentProjectId) return switchView('project');
-            if (target.closest('#btnViewOverdue')) return showOverdueModal();
-            if (target.closest('#modalClose') || target.matches('.modal-backdrop')) return dom.modalBackdrop.style.display = 'none';
-            if (target.closest('#toastClose')) return dom.toast.classList.remove('show');
-            if (target.closest('#btnDismissOverdue')) return dom.overdueBanner.classList.remove('show');
-            
-            // Set Today buttons
-            const today = formatDateForInput(new Date());
-            if (target.closest('#btnSetStartToday')) dom.projStart.value = today;
-            if (target.closest('#btnSetDueToday')) dom.projDue.value = today;
-            if (target.closest('#btnStepDueToday')) dom.stepDue.value = today;
-            if (target.closest('#btnSubDueToday')) dom.subDue.value = today;
-
-            // Project/Item selection from lists
-            if (action === 'select-project' && id) {
-                handleSelectProject(id);
-                dom.modalBackdrop.style.display = 'none'; // Close modal if open
-            }
-            if (target.closest('.project-item')) {
-                 handleSelectProject(target.closest('.project-item').dataset.id);
-            }
-        });
-
-        // Step container delegation
-        dom.steps.addEventListener('click', (e) => {
-            const stepEl = e.target.closest('[data-step-id]');
-            if (!stepEl) return;
-            const stepId = stepEl.dataset.stepId;
-            const subStepEl = e.target.closest('[data-substep-id]');
-            const action = e.target.dataset.action;
-            
-            if (action === 'delete-step') {
-                if (confirm('Delete this step and all its sub-steps?')) {
-                    deleteStep(currentProjectId, stepId);
-                    renderSteps();
-                    renderProjectList();
-                    showToast("Step deleted.", "success");
-                }
-            } else if (action === 'delete-substep' && subStepEl) {
-                if (confirm('Delete this sub-step?')) {
-                    deleteSubStep(currentProjectId, stepId, subStepEl.dataset.substepId);
-                    renderSteps();
-                    renderProjectList();
-                    showToast("Sub-step deleted.", "success");
-                }
-            }
-        });
-
-        dom.steps.addEventListener('change', (e) => {
-            const stepEl = e.target.closest('[data-step-id]');
-            if (!stepEl || e.target.type !== 'checkbox') return;
-            const stepId = stepEl.dataset.stepId;
-            const subStepEl = e.target.closest('[data-substep-id]');
-            const action = e.target.dataset.action;
-
-            if (action === 'toggle-step') {
-                toggleStepCompletion(currentProjectId, stepId);
-            } else if (action === 'toggle-substep' && subStepEl) {
-                toggleSubStepCompletion(currentProjectId, stepId, subStepEl.dataset.substepId);
-            }
-            renderSteps();
-            renderProjectList(); // Progress may have changed
-        });
-
-        // Search and filter
-        dom.searchInput.addEventListener('input', debounce(renderProjectList, 300));
-        dom.statusFilter.addEventListener('change', renderProjectList);
-        
-        // Import
-        document.getElementById('importFile').addEventListener('change', handleImport);
-    };
-
-    // --- Initialization ---
-    const init = () => {
-        loadProjects();
-        initEventListeners();
-        switchView('dashboard');
-        if (!projects.length) {
-            showToast("Welcome! Create a project to start.", "info");
-        }
-    };
-
-    document.addEventListener('DOMContentLoaded', init);
-
-})();
-</script>
+    </script>
 </body>
 </html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upanishads Flashcards - Chapter Loading...</title>
+    
+    <link rel="stylesheet" href="upanishad_chapterstyle.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Custom colors for Upanishads theme */
+        :root {
+            --primary: #2c5530; 
+            --primary-dark: #1a331a;
+            --secondary: #D4AF37;
+            --accent: #8B4513;
+            --light: #f8f9fa;
+            --dark: #1a331a; 
+            --gray: #696969;
+        }
+
+        .flashcard-front { background: linear-gradient(135deg, #1a331a, #2c5530); color: white; }
+        .flashcard-back { background: linear-gradient(135deg, #8B4513, #654321); color: white; }
+        .back-link { background: rgba(44, 85, 48, 0.1); }
+        .back-link:hover { background: rgba(44, 85, 48, 0.15); }
+
+        /* Improved flashcard content layout */
+        .question-container {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .question-text {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .answer-text {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        /* Controls styling */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            gap: 10px;
+            width: 100%;
+        }
+        .controls > button {
+            flex: 1;
+            min-width: 0;
+            max-width: none;
+        }
+        .btn-previous, .btn-next {
+            max-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 id="chapterTitle">Loading Chapter...</h1>            
+            <div class="chapter-info" id="chapterInfo">Please wait.</div>
+            <a href="index.html" class="back-link">← Back to Chapters</a>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-box"><div class="stat-value" id="currentCard">0</div><div class="stat-label">Current Card</div></div>
+            <div class="stat-box"><div class="stat-value" id="totalCards">0</div><div class="stat-label">Total Cards</div></div>
+            <div class="stat-box"><div class="stat-value" id="completionRate">0%</div><div class="stat-label">Completion</div></div>
+        </div>
+        
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        
+        <div class="flashcard-container">
+            <div class="flashcard" id="flashcard" onclick="flipCard()">
+                <div class="flashcard-front">
+                    <div class="flashcard-content">
+                        <div class="question-container">
+                            <div class="scrollable-question">
+                                <div class="question-text" id="questionText"></div>
+                            </div>
+                        </div>
+                        <div class="hint">Click to reveal answer</div>
+                    </div>
+                </div>
+                <div class="flashcard-back">
+                    <div class="flashcard-content">
+                        <div class="answer-text" id="answerText"></div>
+                        <div class="concept" id="concept"></div>
+                        <div class="hint">Click to see question</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn-previous" onclick="previousCard()" id="prevBtn">← Previous</button>
+            <button class="btn-shuffle" onclick="shuffleCards()">🔀 Shuffle</button>
+            <button class="btn-reset" onclick="resetCards()">↺ Reset</button>
+            <button class="btn-next" onclick="nextCard()" id="nextBtn">Next →</button>
+        </div>
+        
+        <div class="info-panel">
+            <p><strong>Tip:</strong> Click on the card to flip between question and answer. Use keyboard arrows for navigation.</p>
+        </div>
+    </div>
+
+    <script>
+        // Define PROJECT_ID_GLOBAL for flashcards.js
+        const PROJECT_ID_GLOBAL = 'UPANISHAD_';
+
+        function getChapterID() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('chap'); 
+        }
+
+        const chapterID = getChapterID();
+        if (chapterID) {
+            const script = document.createElement('script');
+            script.src = 'upanishad_chap_' + chapterID + '.js';
+            
+            script.onload = function() {
+                if (typeof chapterMetadata !== 'undefined') {
+                    document.getElementById('chapterTitle').textContent = chapterMetadata.title;
+                    document.getElementById('chapterInfo').textContent = chapterMetadata.info;
+                    document.title = chapterMetadata.title;
+                } else {
+                    document.getElementById('chapterTitle').textContent = "Error: Data File Missing!";
+                    document.getElementById('chapterInfo').textContent = "Please ensure upanishad_chap_" + chapterID + ".js exists and is formatted correctly.";
+                    return; 
+                }
+
+                const logicScript = document.createElement('script');
+                logicScript.src = 'upanishad_flashcards.js';
+                
+                logicScript.onload = function() {
+                    if (typeof initializeFlashcards === 'function') {
+                        initializeFlashcards();
+                    }
+                };
+                document.body.appendChild(logicScript);
+            };
+            
+            script.onerror = function() {
+                document.getElementById('chapterTitle').textContent = "Error: Data File Missing!";
+                document.getElementById('chapterInfo').textContent = "Could not load upanishad_chap_" + chapterID + ".js. Check the file name and path.";
+            };
+            document.head.appendChild(script);
+
+        } else {
+            document.getElementById('chapterTitle').textContent = "Error: Chapter not selected.";
+            document.getElementById('chapterInfo').textContent = "Return to index to select a chapter.";
+        }
+        
+    </script>
+</body>
+</html>
