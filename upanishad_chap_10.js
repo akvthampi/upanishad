@@ -1,7 +1,7 @@
 // upanishad_chap_10.js
 const chapterMetadata = {
     title: "Chapter 10: Comparative Study",
-    info: "Upanishads and other spiritual traditions (150+ cards)"
+    info: "Upanishads and other spiritual traditions"
 };
 const flashcards = [
     { 

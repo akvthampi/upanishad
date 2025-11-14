@@ -1,7 +1,7 @@
 // upanishad_chap_06.js
 const chapterMetadata = {
     title: "Chapter 6: Ethical Teachings",
-    info: "Dharma, karma, and moral principles (110+ cards)"
+    info: "Dharma, karma, and moral principles"
 };
 const flashcards = [
     { 

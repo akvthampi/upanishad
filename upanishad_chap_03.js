@@ -1,7 +1,7 @@
 // upanishad_chap_03.js
 const chapterMetadata = {
     title: "Chapter 3: Metaphysical Concepts",
-    info: "Brahman, Atman, and cosmic principles (120+ cards)"
+    info: "Brahman, Atman, and cosmic principles"
 };
 const flashcards = [
     { 

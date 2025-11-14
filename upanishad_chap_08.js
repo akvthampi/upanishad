@@ -1,7 +1,7 @@
 // upanishad_chap_08.js
 const chapterMetadata = {
     title: "Chapter 8: Psychology of Consciousness",
-    info: "Mind, senses, and states of awareness (110+ cards)"
+    info: "Mind, senses, and states of awareness"
 };
 const flashcards = [
     { 

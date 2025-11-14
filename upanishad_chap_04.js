@@ -1,7 +1,7 @@
 // upanishad_chap_04.js
 const chapterMetadata = {
     title: "Chapter 4: Philosophical Framework",
-    info: "Core teachings and worldviews (110+ cards)"
+    info: "Core teachings and worldviews"
 };
 const flashcards = [
     { 

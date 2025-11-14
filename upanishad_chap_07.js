@@ -1,7 +1,7 @@
 // upanishad_chap_07.js
 const chapterMetadata = {
     title: "Chapter 7: Cosmology & Creation",
-    info: "Universe origins and cosmic order (120+ cards)"
+    info: "Universe origins and cosmic order"
 };
 const flashcards = [
     { 

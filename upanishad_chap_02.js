@@ -1,7 +1,7 @@
 // upanishad_chap_02.js
 const chapterMetadata = {
     title: "Chapter 2: Principal Upanishads",
-    info: "Major Upanishads and their unique contributions (100+ cards)"
+    info: "Major Upanishads and their unique contributions"
 };
 const flashcards = [
     { 

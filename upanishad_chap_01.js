@@ -1,7 +1,7 @@
 // upanishad_chap_01.js
 const chapterMetadata = {
     title: "Chapter 1: Introduction to Upanishads",
-    info: "Origins, meaning, and significance of the Upanishads (100+ cards)"
+    info: "Origins, meaning, and significance of the Upanishads"
 };
 const flashcards = [
     { 

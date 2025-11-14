@@ -1,7 +1,7 @@
 // upanishad_chap_09.js
 const chapterMetadata = {
     title: "Chapter 9: Modern Relevance",
-    info: "Applications in contemporary life (120+ cards)"
+    info: "Applications in contemporary life"
 };
 const flashcards = [
     { 

@@ -1,7 +1,7 @@
 // upanishad_chap_05.js
 const chapterMetadata = {
     title: "Chapter 5: Spiritual Practices",
-    info: "Meditation, yoga, and self-realization (120+ cards)"
+    info: "Meditation, yoga, and self-realization"
 };
 const flashcards = [
     { 
